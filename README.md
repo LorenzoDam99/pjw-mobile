@@ -1,4 +1,4 @@
-# Ciclo — Mobile (Android)
+# BikeApp — Mobile (Android)
 
 App Flutter del servizio di noleggio bici. Punta allo stesso backend del frontend web.
 
