@@ -122,6 +122,10 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
       _toast('Aggiungi almeno una bici al carrello');
       return;
     }
+    if (draft.cart.any((it) => it.insuranceId == null || it.insuranceId!.isEmpty)) {
+      _toast('Seleziona un\'assicurazione per ogni bici');
+      return;
+    }
     setState(() => _submitting = true);
     final parts = draft.bookingTime.split(':');
     final hour = int.parse(parts[0]);
@@ -197,34 +201,40 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
         ),
         title: const Text('Nuova prenotazione'),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: bicycles.when(
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (bikes) {
-              final halfDays = _halfDays(draft.bookingDate, draft.returnDate);
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          border: Border(top: BorderSide(color: AppTheme.border)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Builder(builder: (context) {
+              final bikesList = bicycles.maybeWhen(
+                  data: (l) => l, orElse: () => const <Bicycle>[]);
+              final insList = insurances.maybeWhen(
+                  data: (l) => l, orElse: () => const <Insurance>[]);
+              final accList = accessories.maybeWhen(
+                  data: (l) => l, orElse: () => const <Accessory>[]);
+              final halfDays =
+                  _halfDays(draft.bookingDate, draft.returnDate);
               final total = draft.cart.fold<double>(
                 0,
                 (s, it) => s +
                     _itemTotal(
                       item: it,
-                      bike: _findBike(it.bikeId, bikes),
-                      insurance: insurances.maybeWhen(
-                        data: (l) => l.firstWhere(
-                          (i) => i.id == it.insuranceId,
-                          orElse: () => Insurance(
-                              id: '', name: '', unitPrice: 0),
-                        ),
+                      bike: _findBike(it.bikeId, bikesList),
+                      insurance: insList.firstWhere(
+                        (i) => i.id == it.insuranceId,
                         orElse: () =>
                             Insurance(id: '', name: '', unitPrice: 0),
                       ),
-                      all: accessories.maybeWhen(
-                          data: (l) => l, orElse: () => const []),
+                      all: accList,
                       halfDays: halfDays,
                     ),
               );
+              final cartCount =
+                  draft.cart.fold<int>(0, (s, i) => s + i.quantity);
               return Row(
                 children: [
                   Expanded(
@@ -240,6 +250,9 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
                     ),
                   ),
                   ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(120, 48),
+                    ),
                     onPressed: _submitting || draft.cart.isEmpty
                         ? null
                         : () => _submit(draft),
@@ -253,13 +266,13 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
                         : const Icon(Icons.check),
                     label: Text(_submitting
                         ? 'Invio...'
-                        : (draft.cart.length > 1
-                            ? 'Conferma ${draft.cart.fold<int>(0, (s, i) => s + i.quantity)}'
+                        : (cartCount > 1
+                            ? 'Conferma $cartCount'
                             : 'Conferma')),
                   ),
                 ],
               );
-            },
+            }),
           ),
         ),
       ),
@@ -269,22 +282,32 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
           _StepCard(
             n: '01',
             title: 'Modalità di ricerca',
-            child: SegmentedButton<BookingMode>(
-              segments: const [
-                ButtonSegment(
-                    value: BookingMode.retailer,
-                    label: Text('Per punto vendita'),
-                    icon: Icon(Icons.store)),
-                ButtonSegment(
-                    value: BookingMode.ideal,
-                    label: Text('Bici ideale'),
-                    icon: Icon(Icons.tune)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _ModeButton(
+                    label: 'Per punto vendita',
+                    icon: Icons.store,
+                    selected: draft.mode == BookingMode.retailer,
+                    onTap: () {
+                      notifier.patch(mode: BookingMode.retailer);
+                      notifier.selectRetailer(null);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _ModeButton(
+                    label: 'Bici ideale',
+                    icon: Icons.tune,
+                    selected: draft.mode == BookingMode.ideal,
+                    onTap: () {
+                      notifier.patch(mode: BookingMode.ideal);
+                      notifier.selectRetailer(null);
+                    },
+                  ),
+                ),
               ],
-              selected: {draft.mode},
-              onSelectionChanged: (s) {
-                notifier.patch(mode: s.first);
-                notifier.selectRetailer(null);
-              },
             ),
           ),
           const SizedBox(height: 12),
@@ -927,22 +950,32 @@ class _CurrentBikeConfig extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           insurances.maybeWhen(
-            data: (list) => DropdownButtonFormField<String?>(
-              value: draft.currentInsuranceId,
-              decoration:
-                  const InputDecoration(labelText: 'Assicurazione (opzionale)'),
-              isExpanded: true,
-              items: [
-                const DropdownMenuItem(value: null, child: Text('Nessuna')),
-                ...list.map((i) => DropdownMenuItem(
-                      value: i.id,
-                      child: Text(
-                          '${i.name} · €${i.unitPrice.toStringAsFixed(2)}',
-                          overflow: TextOverflow.ellipsis),
-                    )),
-              ],
-              onChanged: (v) => notifier.patch(currentInsuranceId: v),
-            ),
+            data: (list) {
+              final effectiveId = draft.currentInsuranceId ??
+                  (list.isNotEmpty ? list.first.id : null);
+              if (effectiveId != null && draft.currentInsuranceId == null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  notifier.patch(currentInsuranceId: effectiveId);
+                });
+              }
+              return DropdownButtonFormField<String>(
+                value: effectiveId,
+                decoration:
+                    const InputDecoration(labelText: 'Assicurazione'),
+                isExpanded: true,
+                items: list
+                    .map((i) => DropdownMenuItem(
+                          value: i.id,
+                          child: Text(
+                              '${i.name} · €${i.unitPrice.toStringAsFixed(2)}',
+                              overflow: TextOverflow.ellipsis),
+                        ))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) notifier.patch(currentInsuranceId: v);
+                },
+              );
+            },
             orElse: () => const _DropdownSkeleton(),
           ),
           const SizedBox(height: 12),
@@ -984,6 +1017,9 @@ class _CurrentBikeConfig extends ConsumerWidget {
                 ),
               ),
               ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(120, 48),
+                ),
                 onPressed: maxQty < 1 ||
                         draft.bookingDate == null ||
                         draft.returnDate == null
@@ -1286,6 +1322,58 @@ class _QtyStepper extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ModeButton extends StatelessWidget {
+  const _ModeButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppTheme.fg : AppTheme.surface,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border:
+                Border.all(color: selected ? AppTheme.fg : AppTheme.border),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  size: 16,
+                  color: selected ? Colors.white : AppTheme.muted),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? Colors.white : AppTheme.fg,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

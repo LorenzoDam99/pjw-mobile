@@ -37,7 +37,18 @@ class BookingsRepository {
 
   Future<List<Booking>> list() async {
     final res = await _api.dio.get('/bookings');
-    return ((res.data as List?) ?? [])
+    final raw = res.data;
+    final List items;
+    if (raw is List) {
+      items = raw;
+    } else if (raw is Map<String, dynamic>) {
+      // Backend wraps the list in an envelope object — try common keys
+      final wrapped = raw['data'] ?? raw['bookings'] ?? raw['items'] ?? raw['content'];
+      items = wrapped is List ? wrapped : [];
+    } else {
+      items = [];
+    }
+    return items
         .map((e) => Booking.fromJson(e as Map<String, dynamic>))
         .toList();
   }
