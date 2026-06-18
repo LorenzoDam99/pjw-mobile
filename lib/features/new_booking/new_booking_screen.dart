@@ -140,7 +140,7 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
       retailerCloseHour,
     );
     final repo = ref.read(bookingsRepositoryProvider);
-    final futures = <Future<bool>>[];
+    final futures = <Future<Booking?>>[];
     for (final item in draft.cart) {
       for (var i = 0; i < item.quantity; i++) {
         futures.add(repo
@@ -153,13 +153,19 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
               returnDate: ret,
               notes: _notesCtrl.text.isEmpty ? null : _notesCtrl.text,
             ))
-            .then((_) => true)
-            .catchError((_) => false));
+            .then<Booking?>((b) => b)
+            .catchError((_) => null));
       }
     }
     final results = await Future.wait(futures);
-    final ok = results.where((r) => r).length;
+    final succeeded = results.whereType<Booking>().toList();
+    final ok = succeeded.length;
     final fail = results.length - ok;
+    if (succeeded.isNotEmpty) {
+      repo
+          .notifyConfirmed(succeeded.map((b) => b.id).toList())
+          .catchError((_) {});
+    }
     if (mounted) setState(() => _submitting = false);
     if (fail == 0) {
       ref.invalidate(bookingsListProvider);

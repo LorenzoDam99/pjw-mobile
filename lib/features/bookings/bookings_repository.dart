@@ -87,6 +87,13 @@ class BookingsRepository {
     return Booking.fromJson(res.data as Map<String, dynamic>);
   }
 
+  Future<void> notifyConfirmed(List<String> bookingIds) async {
+    await _api.dio.post(
+      '/notifications/booking-confirmed',
+      data: {'bookingIds': bookingIds},
+    );
+  }
+
   Future<Booking> update(String id, UpdateBookingPayload payload) async {
     final res =
         await _api.dio.patch('/bookings/$id', data: payload.toJson());
