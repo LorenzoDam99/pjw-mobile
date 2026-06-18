@@ -94,8 +94,27 @@ class _BookingDetailScreenState extends ConsumerState<BookingDetailScreen> {
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text('Errore: $e', style: TextStyle(color: AppTheme.destructive)),
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.cloud_off_outlined, size: 48, color: AppTheme.muted),
+              const SizedBox(height: 12),
+              const Text('Impossibile caricare la prenotazione',
+                  style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              Text(networkErrorMessage(e),
+                  style: TextStyle(color: AppTheme.muted, fontSize: 13),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () =>
+                    ref.refresh(bookingDetailProvider(widget.id).future),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Riprova'),
+              ),
+            ],
+          ),
         ),
         data: (b) {
           final df = DateFormat('EEEE d MMMM y', 'it_IT');

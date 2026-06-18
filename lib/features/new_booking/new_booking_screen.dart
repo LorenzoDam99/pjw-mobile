@@ -437,8 +437,9 @@ class _RetailerMode extends ConsumerWidget {
           padding: EdgeInsets.symmetric(vertical: 24),
           child: Center(child: CircularProgressIndicator()),
         ),
-        error: (e, _) => Text('Errore: $e',
-            style: TextStyle(color: AppTheme.destructive)),
+        error: (e, _) => _NetworkError(
+            message: networkErrorMessage(e),
+            onRetry: () => ref.refresh(retailersProvider.future)),
         data: (rs) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -468,8 +469,10 @@ class _RetailerMode extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: CircularProgressIndicator(),
                   )),
-                  error: (e, _) => Text('Errore: $e',
-                      style: TextStyle(color: AppTheme.destructive)),
+                  error: (e, _) => _NetworkError(
+                      message: networkErrorMessage(e),
+                      onRetry: () => ref.refresh(
+                          retailerStocksProvider(draft.retailerId!).future)),
                   data: (stock) => _BikeGrid(
                     items: stock.bicycles,
                     catalog: bikes.maybeWhen(
@@ -569,8 +572,9 @@ class _IdealMode extends ConsumerWidget {
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (e, _) => Text('Errore: $e',
-                style: TextStyle(color: AppTheme.destructive)),
+            error: (e, _) => _NetworkError(
+                message: networkErrorMessage(e),
+                onRetry: () => ref.refresh(bicyclesProvider.future)),
             data: (allBikes) {
               final f = draft.ideal;
               final matchingIds = allBikes.where((b) {
@@ -585,9 +589,9 @@ class _IdealMode extends ConsumerWidget {
                 loading: () => const SizedBox(
                     height: 60,
                     child: Center(child: CircularProgressIndicator())),
-                error: (e, _) =>
-                    Text('Errore: $e',
-                        style: TextStyle(color: AppTheme.destructive)),
+                error: (e, _) => _NetworkError(
+                    message: networkErrorMessage(e),
+                    onRetry: () => ref.refresh(retailersProvider.future)),
                 data: (rs) => Column(
                   children: rs
                       .map((r) => _IdealRetailerCard(
@@ -1387,4 +1391,33 @@ class _DropdownSkeleton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
       );
+}
+
+class _NetworkError extends StatelessWidget {
+  const _NetworkError({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cloud_off_outlined, size: 32, color: AppTheme.muted),
+          const SizedBox(height: 8),
+          Text(message,
+              style: TextStyle(color: AppTheme.muted, fontSize: 13),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 16),
+            label: const Text('Riprova'),
+          ),
+        ],
+      ),
+    );
+  }
 }

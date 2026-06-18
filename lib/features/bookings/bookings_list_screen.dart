@@ -95,9 +95,27 @@ class _BookingsListScreenState extends ConsumerState<BookingsListScreen> {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => ListView(children: [
             Padding(
-              padding: const EdgeInsets.all(24),
-              child: Text('Errore nel caricamento: $e',
-                  style: TextStyle(color: AppTheme.destructive)),
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(Icons.cloud_off_outlined,
+                      size: 48, color: AppTheme.muted),
+                  const SizedBox(height: 12),
+                  Text('Impossibile caricare le prenotazioni',
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(networkErrorMessage(e),
+                      style: TextStyle(color: AppTheme.muted, fontSize: 13),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: () =>
+                        ref.refresh(bookingsListProvider.future),
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text('Riprova'),
+                  ),
+                ],
+              ),
             ),
           ]),
           data: (bookings) {

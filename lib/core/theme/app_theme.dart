@@ -146,3 +146,18 @@ TextStyle eyebrowStyle() => GoogleFonts.inter(
       letterSpacing: 2,
       color: AppTheme.muted,
     );
+
+/// Returns a user-friendly network error message.
+String networkErrorMessage(Object error) {
+  final s = error.toString().toLowerCase();
+  if (s.contains('timeout')) {
+    return 'Il server è in avvio, potrebbe richiedere qualche secondo.';
+  }
+  if (s.contains('socket') || s.contains('connection refused')) {
+    return 'Nessuna connessione di rete.';
+  }
+  if (s.contains('401') || s.contains('unauthorized')) {
+    return 'Sessione scaduta. Effettua di nuovo il login.';
+  }
+  return 'Errore di connessione. Verifica la rete e riprova.';
+}

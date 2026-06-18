@@ -18,8 +18,8 @@ class ApiClient {
   ApiClient(this._tokens) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 20),
-      receiveTimeout: const Duration(seconds: 30),
+      connectTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 60),
       headers: const {'Content-Type': 'application/json'},
       // Don't throw on 4xx/5xx — we want to inspect them in our wrappers.
       validateStatus: (s) => s != null && s < 500,

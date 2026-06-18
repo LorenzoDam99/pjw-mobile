@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,7 +38,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     try {
       await ref
           .read(authRepositoryProvider)
-          .verifyOtp(email: widget.email, otpCode: _otp.text.trim());
+          .verifyOtp(email: widget.email, otpCode: _otp.text.trim().toUpperCase());
       setState(() => _success = true);
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) context.go('/login');
@@ -112,13 +113,21 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               ],
               TextField(
                 controller: _otp,
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.visiblePassword,
+                textCapitalization: TextCapitalization.characters,
+                autocorrect: false,
+                enableSuggestions: false,
                 maxLength: 8,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                  TextInputFormatter.withFunction((_, n) =>
+                      n.copyWith(text: n.text.toUpperCase())),
+                ],
                 style: const TextStyle(
                     fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
                 decoration: const InputDecoration(
-                  hintText: '00000000',
+                  hintText: 'XXXXXXXX',
                   counterText: '',
                 ),
               ),
