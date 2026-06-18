@@ -35,9 +35,7 @@ class _NewBookingScreenState extends ConsumerState<NewBookingScreen> {
 
   int _halfDays(DateTime? s, DateTime? e) {
     if (s == null || e == null || e.isBefore(s)) return 0;
-    final days =
-        (e.difference(s).inSeconds / 86400).ceil().clamp(1, 9999);
-    return days * 2;
+    return (e.difference(s).inDays + 1) * 2;
   }
 
   Bicycle? _findBike(String? id, List<Bicycle> bikes) =>

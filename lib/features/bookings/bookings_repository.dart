@@ -31,6 +31,27 @@ class CreateBookingPayload {
       };
 }
 
+class UpdateBookingPayload {
+  UpdateBookingPayload({
+    required this.bookingDate,
+    required this.returnDate,
+    this.insuranceId,
+    this.accessories = const [],
+  });
+  final DateTime bookingDate;
+  final DateTime returnDate;
+  final String? insuranceId;
+  final List<String> accessories;
+
+  Map<String, dynamic> toJson() => {
+        'bookingDate': bookingDate.toUtc().toIso8601String(),
+        'returnDate': returnDate.toUtc().toIso8601String(),
+        if (insuranceId != null && insuranceId!.isNotEmpty)
+          'insuranceId': insuranceId,
+        'accessories': accessories,
+      };
+}
+
 class BookingsRepository {
   BookingsRepository(this._api);
   final ApiClient _api;
@@ -62,6 +83,15 @@ class BookingsRepository {
     final res = await _api.dio.post('/bookings', data: payload.toJson());
     if (res.statusCode == null || res.statusCode! >= 400) {
       throw ApiException(res.statusCode, 'Creazione prenotazione fallita');
+    }
+    return Booking.fromJson(res.data as Map<String, dynamic>);
+  }
+
+  Future<Booking> update(String id, UpdateBookingPayload payload) async {
+    final res =
+        await _api.dio.patch('/bookings/$id', data: payload.toJson());
+    if (res.statusCode == null || res.statusCode! >= 400) {
+      throw ApiException(res.statusCode, 'Modifica prenotazione fallita');
     }
     return Booking.fromJson(res.data as Map<String, dynamic>);
   }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+  <!-- Rear wheel -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:pathData="M6.5,16.5 m-3,0 a3,3 0,1,0 6,0 a3,3 0,1,0 -6,0"/>
+
+  <!-- Front wheel -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:pathData="M17.5,16.5 m-3,0 a3,3 0,1,0 6,0 a3,3 0,1,0 -6,0"/>
+
+  <!-- Rear triangle: chain stays + seat stays -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"
+      android:pathData="M6.5,16.5 L11.5,16.5 L11,10.5 L6.5,16.5"/>
+
+  <!-- Main diamond frame: seat tube + top tube + head tube + down tube -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"
+      android:pathData="M11,10.5 L15.5,9.5 L16,13 L11.5,16.5 Z"/>
+
+  <!-- Front fork -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.5"
+      android:strokeLineCap="round"
+      android:pathData="M16,13 L17.5,16.5"/>
+
+  <!-- Saddle -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:pathData="M9.5,10 L12.5,10"/>
+
+  <!-- Handlebar stem + bars -->
+  <path
+      android:fillColor="#00000000"
+      android:strokeColor="#FFFFFF"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"
+      android:pathData="M15.5,9.5 L15.5,8 M14,7.5 L17,7.5"/>
+
+</vector>
