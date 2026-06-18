@@ -70,7 +70,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: const Icon(Icons.directions_bike, size: 20),
                     ),
                     const SizedBox(width: 10),
-                    const Text('CICLO',
+                    const Text('BIKE RENT',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
